@@ -10,7 +10,8 @@ def preprocessor(image_array):
     # This function expects an observation directly from an Atari game in the gym (a numpy array representing a frame)
     image = Image.fromarray(image_array)
     # The transformations performed here are exactly those performed on Atari frames in the original DQN paper
-    image_transform = transforms.Compose([transforms.Grayscale(), transforms.Resize((110, 84)), transforms.CenterCrop(84), transforms.ToTensor()])
+    image_transform = transforms.Compose([transforms.Grayscale(), transforms.Resize((110, 84)), transforms.CenterCrop(84), 
+                                            transforms.ToTensor()])
     transformed_image = image_transform(image)
     return transformed_image
 
@@ -54,5 +55,7 @@ class DQNAgent():
 
     def __init__(self):
         pass
+
+    def 
 
 
