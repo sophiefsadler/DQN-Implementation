@@ -1,4 +1,5 @@
 import gym
+import random
 import numpy as np
 import torch
 import torch.nn as nn
@@ -28,8 +29,20 @@ def phi(image_list):
 
 class ReplayMemory(object):
 
-    def __init__(self, capacity, agent):
+    def __init__(self, capacity):
         self.capacity = capacity
+        self.memory = []
+        self.current_experience = 0 # This tracks which position in the memory we are updating with a new experience     
+
+    def update(self, new_experience):
+        if self.current_experience > len(self.memory):
+            self.memory.append(None)
+        self.memory[self.current_experience] = new_experience
+        self.current_experience = (self.current_experience + 1) % self.capacity
+
+    def sample(self):
+        # Used to obtain the random samples for training
+        return random.sample(self.memory)
 
 class QNetwork(nn.Module):
 
@@ -41,21 +54,31 @@ class QNetwork(nn.Module):
         # Image size = 16 x 20 x 20
         self.conv2 = nn.Conv2d(16, 32, kernel_size=4, stride=2)
         # Image size = 32 x 9 x 9
-        self.fc1 = nn.Linear(32*9*9, 256)
-        self.fc2 = nn.Linear(256, n_actions)
+        self.fc = nn.Linear(32*9*9, n_actions)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = x.view((x.shape[0], -1))
-        x = F.relu(self.fc1(x))
-        return self.fc2(x)
+        return self.fc(x) # Ouput has shape [1, n_actions]; the extra dimension is currently removed in the agent policy
 
-class DQNAgent():
+class AgentPolicy():
 
-    def __init__(self):
-        pass
+    def __init__(self, q_values):
+        q_values = q_values.squeeze(0) # Output from Q-Network is a torch tensor of shape [1, n_actions], get rid of the extra dimension
+        self.q_values = q_values
+        self.epsilon = 1
 
-    def 
+    def choose_action(self):
+        action = self.epsilon_greedy()
+        return action
 
+    def epsilon_greedy(self):
+        value = random.random()
+        if value < self.epsilon:
+            action_value = random.randint(0, len(self.q_values) - 1)
+            return action_value
+        else:
+            _, action_value = self.q_values.max(0)
+            return action_value.item()
 
