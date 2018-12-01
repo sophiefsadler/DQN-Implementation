@@ -40,9 +40,12 @@ class ReplayMemory(object):
         self.memory[self.current_experience] = new_experience
         self.current_experience = (self.current_experience + 1) % self.capacity
 
-    def sample(self):
+    def sample(self, batch_size):
         # Used to obtain the random samples for training
-        return random.sample(self.memory)
+        return random.sample(self.memory, batch_size)
+
+    def clear(self):
+        self.memory = []
 
 class QNetwork(nn.Module):
 
@@ -64,21 +67,23 @@ class QNetwork(nn.Module):
 
 class AgentPolicy():
 
-    def __init__(self, q_values):
-        q_values = q_values.squeeze(0) # Output from Q-Network is a torch tensor of shape [1, n_actions], get rid of the extra dimension
-        self.q_values = q_values
+    def __init__(self, env):
         self.epsilon = 1
+        self.env = env
 
-    def choose_action(self):
-        action = self.epsilon_greedy()
+    def choose_action(self, net, observation=None):
+        if observation:
+            q_values = net(observation).squeeze(0) # Output from Q-Network has dimension [1, n_actions]; remove the extra dimension
+            action = self.epsilon_greedy(q_values)
+        else:
+            action = self.env.action_space.sample()
         return action
 
-    def epsilon_greedy(self):
+    def epsilon_greedy(self, q_values): # DQN is trained with epsilon greedy policy
         value = random.random()
         if value < self.epsilon:
-            action_value = random.randint(0, len(self.q_values) - 1)
+            action_value = random.randint(0, len(q_values) - 1)
             return action_value
         else:
-            _, action_value = self.q_values.max(0)
+            _, action_value = q_values.max(0)
             return action_value.item()
-
