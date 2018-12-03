@@ -35,7 +35,7 @@ class ReplayMemory(object):
         self.current_experience = 0 # This tracks which position in the memory we are updating with a new experience     
 
     def update(self, new_experience):
-        if self.current_experience > len(self.memory):
+        if self.current_experience >= len(self.memory):
             self.memory.append(None)
         self.memory[self.current_experience] = new_experience
         self.current_experience = (self.current_experience + 1) % self.capacity
@@ -65,23 +65,22 @@ class QNetwork(nn.Module):
         x = x.view((x.shape[0], -1))
         return self.fc(x) # Ouput has shape [1, n_actions]; the extra dimension is currently removed in the agent policy
 
-class AgentPolicy():
+class AgentPolicy(object):
 
     def __init__(self, env):
-        self.epsilon = 1
         self.env = env
 
-    def choose_action(self, net, observation=None):
-        if observation:
+    def choose_action(self, net, epsilon, observation=None):
+        try:
             q_values = net(observation).squeeze(0) # Output from Q-Network has dimension [1, n_actions]; remove the extra dimension
-            action = self.epsilon_greedy(q_values)
-        else:
+            action = self.epsilon_greedy(epsilon, q_values)
+        except TypeError:
             action = self.env.action_space.sample()
         return action
 
-    def epsilon_greedy(self, q_values): # DQN is trained with epsilon greedy policy
+    def epsilon_greedy(self, epsilon, q_values): # DQN is trained with epsilon greedy policy
         value = random.random()
-        if value < self.epsilon:
+        if value < epsilon:
             action_value = random.randint(0, len(q_values) - 1)
             return action_value
         else:
