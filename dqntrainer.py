@@ -5,7 +5,7 @@ from tensorboard import Tensorboard
 
 class Trainer(object):
 
-    def __init__(self, env, frame_skip=4, capacity=1000, n_episodes=5000, batch_size=30, gamma=0.99, gpu=False):
+    def __init__(self, env, frame_skip=4, capacity=1000, n_episodes=5000, batch_size=32, gamma=0.99, gpu=False):
         if gpu:
             self.device = 'cuda'
         else:
