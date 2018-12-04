@@ -56,7 +56,7 @@ class Trainer(object):
         self.optimizer.step()
 
     def train(self):
-        for _ in range(self.n_episodes):
+        for ep_number in range(self.n_episodes):
             print('----------NEW EPISODE----------')
             ep_iter = 0
             ep_reward = 0
@@ -82,14 +82,16 @@ class Trainer(object):
                 previous_state = current_state
                 self.memory.update(experience)
                 ep_iter += 1
-                ep_reward += np.clip(reward_sum, -1, 1)
+                self.global_iter += 1
                 if ep_iter % 100 == 0:
                     print('ITERATION NUMBER ', ep_iter)
+                ep_reward += np.clip(reward_sum, -1, 1)
                 if ep_iter > self.batch_size: # Check that the replay memory is full enough to take a sample
                     sample = self.memory.sample(self.batch_size)
                     self.optimize(sample)
                 is_done = done
-            self.tensorboard.log('Episode Length', ep_iter, self.global_iter)
-            self.tensorboard.log('Episode Reward', ep_reward, self.global_iter)
-            self.global_iter += ep_iter
+            self.tensorboard.log('Episode Length', ep_iter, ep_number)
+            self.tensorboard.log('Episode Reward', ep_reward, ep_number)
+            self.tensorboard.log('Epsilon Value', self.epsilon, ep_number)
+            self.epsilon = -(0.9/1000000)*self.global_iter + 1
             ep_iter = 0
