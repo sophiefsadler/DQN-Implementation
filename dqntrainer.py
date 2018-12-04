@@ -5,9 +5,14 @@ from tensorboard import Tensorboard
 
 class Trainer(object):
 
-    def __init__(self, env, frame_skip=4, capacity=1000, n_episodes=5000, batch_size=30, gamma=0.99):
+    def __init__(self, env, frame_skip=4, capacity=1000, n_episodes=5000, batch_size=30, gamma=0.99, gpu=False):
+        if gpu:
+            self.device = 'cuda'
+        else:
+            self.device = 'cpu'
+
         self.memory = ReplayMemory(capacity)
-        self.net = QNetwork(env.action_space.n)
+        self.net = QNetwork(env.action_space.n).to(self.device)
         self.optimizer = optim.RMSprop(self.net.parameters())
         self.loss = nn.SmoothL1Loss()
         self.env = env
@@ -35,7 +40,7 @@ class Trainer(object):
             y = reward # Occurs if new_state is a terminal state
         else:
             y = reward + self.gamma*self.net(new_state).squeeze(0).max().item()
-        return torch.Tensor([y])
+        return torch.Tensor([y], device=self.device)
 
     def optimize(self, sample):
         states = torch.stack([exp[0] for exp in sample])
@@ -63,7 +68,7 @@ class Trainer(object):
             self.memory.clear()
             self.memory.current_experience = 0
             frames_to_stack = self.new_episode()
-            previous_state = phi(frames_to_stack)
+            previous_state = phi(frames_to_stack, self.device)
             current_state = None
             is_done = False
             while not is_done:
@@ -75,7 +80,7 @@ class Trainer(object):
                 if not done:
                     del frames_to_stack[0]
                     frames_to_stack.append(observation) # Add final frame after skipping to the frames to stack
-                    current_state = phi(frames_to_stack)
+                    current_state = phi(frames_to_stack, self.device)
                 else:
                     current_state = previous_state
                 experience = (previous_state, action, np.clip(reward_sum, -1, 1), current_state, done)
