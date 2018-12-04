@@ -7,20 +7,20 @@ import torch.nn.functional as F
 from PIL import Image
 from torchvision import transforms
 
-def preprocessor(image_array):
+def preprocessor(image_array, device):
     # This function expects an observation directly from an Atari game in the gym (a numpy array representing a frame)
     image = Image.fromarray(image_array)
     # The transformations performed here are exactly those performed on Atari frames in the original DQN paper
     image_transform = transforms.Compose([transforms.Grayscale(), transforms.Resize((110, 84)), transforms.CenterCrop(84), 
                                             transforms.ToTensor()])
-    transformed_image = image_transform(image)
+    transformed_image = image_transform(image).to(device)
     return transformed_image
 
-def phi(image_list):
+def phi(image_list, device):
     # image_list is expected to be a list of observations directly from an Atari game in the gym (numpy arrays representing frames)
     processed_list = []
     for image in image_list:
-        processed_image = preprocessor(image)
+        processed_image = preprocessor(image, device)
         processed_image = processed_image.view(84, 84)
         processed_list.append(processed_image)
     phi_stacked = torch.stack(processed_list)
