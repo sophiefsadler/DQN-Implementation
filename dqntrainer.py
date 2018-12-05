@@ -98,5 +98,6 @@ class Trainer(object):
             self.tensorboard.log('Episode Length', ep_iter, ep_number)
             self.tensorboard.log('Episode Reward', ep_reward, ep_number)
             self.tensorboard.log('Epsilon Value', self.epsilon, ep_number)
-            self.epsilon = -(0.9/1000000)*self.global_iter + 1
+            if self.epsilon > 0.1:
+                self.epsilon = -(0.9/1000000)*self.global_iter + 1
             ep_iter = 0
