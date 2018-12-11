@@ -75,7 +75,6 @@ class AgentPolicy(object):
             q_values = net(observation).squeeze(0) # Output from Q-Network has dimension [1, n_actions]; remove the extra dimension
             action = self.epsilon_greedy(epsilon, q_values)
         else:
-            print(type(observation))
             action = self.env.action_space.sample()
         return action
 
