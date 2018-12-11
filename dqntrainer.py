@@ -1,7 +1,7 @@
 import torch
 from torch import optim
 from dqnagent import *
-from tensorboard import Tensorboard
+from board_log import Tensorboard
 
 class Trainer(object):
 
