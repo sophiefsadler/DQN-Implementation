@@ -94,7 +94,7 @@ class Trainer(object):
                 if ep_iter % 100 == 0:
                     print('ITERATION NUMBER ', ep_iter)
                 ep_reward += np.clip(reward_sum, -1, 1)
-                if ep_iter > self.batch_size: # Check that the replay memory is full enough to take a sample
+                if self.global_iter > self.batch_size: # Check that the replay memory is full enough to take a sample 
                     sample = self.memory.sample(self.batch_size)
                     self.optimize(sample)
                 if self.global_iter % self.target_update_freq == 0:
@@ -105,4 +105,3 @@ class Trainer(object):
             self.tensorboard.log('Epsilon Value', self.epsilon, ep_number)
             if self.epsilon > 0.1:
                 self.epsilon = -(0.9/1000000)*self.global_iter + 1
-            ep_iter = 0
