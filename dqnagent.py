@@ -71,10 +71,11 @@ class AgentPolicy(object):
         self.env = env
 
     def choose_action(self, net, epsilon, observation=None):
-        try:
+        if isinstance(observation, torch.Tensor):
             q_values = net(observation).squeeze(0) # Output from Q-Network has dimension [1, n_actions]; remove the extra dimension
             action = self.epsilon_greedy(epsilon, q_values)
-        except TypeError:
+        else:
+            print(type(observation))
             action = self.env.action_space.sample()
         return action
 
