@@ -49,7 +49,7 @@ class Trainer(object):
             y = reward # Occurs if new_state is a terminal state
         else:
             y = reward + self.gamma*self.target(new_state).squeeze(0).max().item()
-        return torch.Tensor([y], device=self.device)
+        return torch.Tensor([y]).to(self.device)
 
     def optimize(self, sample):
         states = torch.stack([exp[0] for exp in sample]).to(self.device)
