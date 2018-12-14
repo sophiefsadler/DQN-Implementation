@@ -1,11 +1,13 @@
+import os
 import torch
+import datetime
 from torch import optim
 from dqnagent import *
 from board_log import Tensorboard
 
 class Trainer(object):
 
-    def __init__(self, env, frame_skip=4, capacity=1000, target_update_freq=500, n_episodes=5000, batch_size=30, gamma=0.99, gpu=False):
+    def __init__(self, env, frame_skip=4, capacity=1000000, target_update_freq=5000, save_freq=100000, n_episodes=100000, batch_size=30, gamma=0.99, gpu=False):
         if gpu:
             self.device = 'cuda'
         else:
@@ -19,6 +21,7 @@ class Trainer(object):
         self.loss = nn.SmoothL1Loss()
         self.env = env
         self.target_update_freq = target_update_freq
+        self.save_freq = save_freq
         self.frame_skip = frame_skip
         self.policy = AgentPolicy(env)
         self.n_episodes = n_episodes
@@ -66,6 +69,14 @@ class Trainer(object):
         loss.backward()
         self.optimizer.step()
 
+    def save_model(self):
+        iter_str = '--%dsteps' % self.global_iter
+        time_now = datetime.datetime.now()
+        time_now = time_now.strftime('%H.%M--%d.%m.%Y')
+        if not os.path.exists('./saved_models'):
+            os.makedirs('./saved_models')
+        torch.save(self.net.state_dict(), './saved_models/dqn_' + time_now + iter_str + '.pth')
+
     def train(self):
         for ep_number in range(self.n_episodes):
             print('----------NEW EPISODE----------')
@@ -99,6 +110,8 @@ class Trainer(object):
                     self.optimize(sample)
                 if self.global_iter % self.target_update_freq == 0:
                     self.update_target()
+                if self.global_iter % self.save_freq == 0:
+                    self.save_model()
                 is_done = done
             self.tensorboard.log('Episode Length', ep_iter, ep_number)
             self.tensorboard.log('Episode Reward', ep_reward, ep_number)
